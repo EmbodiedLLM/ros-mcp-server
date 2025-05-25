@@ -1,189 +1,166 @@
-## Overview
+# ROS MCP Server
+
 ![Static Badge](https://img.shields.io/badge/ROS-Available-green)
 ![Static Badge](https://img.shields.io/badge/ROS2-Available-green)
 [![smithery badge](https://smithery.ai/badge/@lpigeon/ros-mcp-server)](https://smithery.ai/server/@lpigeon/ros-mcp-server)
 ![Static Badge](https://img.shields.io/badge/License-MIT-blue)
 
-<center><img src="https://github.com/lpigeon/ros-mcp-server/blob/main/img/framework.png"/></center>
+一个基于FastMCP的ROS机器人控制服务器，允许Claude等AI助手通过MCP协议控制ROS机器人。
 
-The ROS MCP Server is designed to support robots in performing complex tasks and adapting effectively to various environments by providing a set of functions that transform natural language commands, entered by a user through an LLM, into ROS commands for robot control. Furthermore, by utilizing ``rosbridge``, it is configured to operate with both ``ROS`` and ``ROS2`` systems, and its WebSocket-based communication enables broad applicability across diverse platforms.
+## 🚀 快速开始
 
-Research based on this project can be found in the video linked below.  
-- [An Efficient Robot Control Framework Using the Model Context Protocol](https://www.youtube.com/watch?v=7ut4eqTxwHA)
-
-## Supported Types
-
-- geometry_msgs/Twist
-- geometry_msgs/PoseStamped (Nav2 goals)
-- geometry_msgs/PoseArray (Nav2 waypoints)
-- sensor_msgs/Image
-- sensor_msgs/JointState
-- Service calls (Nav2 waypoint following control)
-
-## Features
-
-- **WebSocket-based universal compatibility**: Communicates with both ROS and ROS2 systems using rosbridge, enabling seamless integration regardless of ROS version.
-- **Cross-platform support**: Works on Linux, Windows, and MacOS, making it suitable for diverse development and deployment environments.
-- **Easy integration with LLMs and AI systems**: Natural language commands can be directly translated into robot actions via MCP functions.
-- **Nav2 navigation support**: Send navigation goals and control waypoint following (equivalent to RViz2 Nav2 Goal functionality).
-- **Extensible function set**: Easily add new robot control or sensor functions by extending the MCP tool interface.
-- **No ROS node modification required**: Interacts with existing ROS/ROS2 topics and services without changing your robot's core code.
-- **Native ROS/ROS2 command compatibility**: Optionally supports using local ROS/ROS2 libraries, so you can run native ROS commands and tools alongside WebSocket-based control.
-
-## Navigation Features
-
-### Single Goal Navigation
-Send individual navigation goals to Nav2:
-```python
-# Send a simple navigation goal
-send_nav2_goal(x=2.0, y=3.0, yaw=1.57)
-
-# Send detailed goal with quaternion orientation
-send_nav2_goal_detailed(x=2.0, y=3.0, z=0.0, qx=0.0, qy=0.0, qz=0.707, qw=0.707)
-```
-
-### Waypoint Following
-Control multi-waypoint navigation (equivalent to RViz2 waypoint functionality):
-```python
-# Define waypoints: [[x, y, yaw], [x, y, yaw], ...]
-waypoints = [
-    [1.0, 2.0, 0.0],      # First waypoint
-    [3.0, 4.0, 1.57],     # Second waypoint  
-    [5.0, 6.0, 3.14]      # Third waypoint
-]
-
-# Send waypoints and start following
-send_and_start_waypoints(waypoints)
-
-# Or control step by step
-send_waypoints(waypoints)
-start_waypoint_following()
-pause_waypoint_following()
-resume_waypoint_following()
-stop_waypoint_following()
-```
-
-For detailed examples, see [WAYPOINT_EXAMPLES.md](WAYPOINT_EXAMPLES.md).
-
-### Position and Localization
-Get current robot position and motion state:
-```python
-# Get robot position (automatically selects best source)
-position = get_robot_position()
-
-# Get position from specific source
-amcl_position = get_robot_position(source="amcl")    # Map-based localization
-odom_position = get_robot_position(source="odom")    # Odometry-based position
-
-# Get current velocity
-velocity = get_robot_velocity()
-
-# Get complete odometry information
-odometry = get_robot_odometry()
-
-# Get AMCL pose with covariance
-amcl_pose = get_robot_amcl_pose()
-```
-
-**Position data includes:**
-- Coordinates (x, y, z)
-- Orientation (yaw angle in radians and degrees)
-- Quaternion representation
-- Frame ID (coordinate system)
-- Velocity information (for odometry)
-- Uncertainty/covariance (for AMCL)
-
-## Contributing
-Contributions are welcome!  
-Whether you're fixing a typo, adding a new function, or suggesting improvements, your help is appreciated.  
-Please follow the [contributing guidelines](CONTRIBUTING.md) for more details on how to contribute to this project.
-
-## Installation
-
-### Installing via Smithery
-
-To install ``ros-mcp-server`` for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@lpigeon/ros-mcp-server):
+### 方法1：Docker部署（推荐）
 
 ```bash
-npx -y @smithery/cli install @lpigeon/ros-mcp-server --client claude
+# 克隆项目
+git clone https://github.com/lpigeon/ros-mcp-server.git
+cd ros-mcp-server
+
+# 一键部署
+./deploy-docker.sh
+
+# 或使用Makefile
+make deploy
 ```
 
-### Installing Locally
+### 方法2：本地开发
 
-### `uv` Installation
-- To install `uv`, you can use the following command:
 ```bash
+# 安装uv（如果没有）
 curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-or
-```bash
-pip install uv
-```
 
-- Create virtual environment and activate it (Optional)
-```bash
-uv venv
-source .venv/bin/activate
+# 安装依赖
+uv sync
+
+# 启动服务器
+uv run server.py
 ```
 
-### MCP Server Configuration
-Set MCP setting to mcp.json.
+## ⚙️ 配置
 
-```bash
-"ros-mcp-server": {
-  "command": "uv",
-  "args": [
-    "--directory",
-    "/ABSOLUTE/PATH/TO/PARENT/FOLDER/ros-mcp-server",,
-    "run",
-    "server.py"
-  ]
-}
+### ROS Bridge配置
+
+1. 修改`server.py`中的IP配置：
+```python
+LOCAL_IP = "10.90.0.101"        # 本机IP
+ROSBRIDGE_IP = "10.90.0.101"    # ROS Bridge服务器IP
+ROSBRIDGE_PORT = 9090           # ROS Bridge端口
 ```
 
-If you use Claude Desktop, you can find mcp.json using the following command:
-
-- MacOS/Linux
+2. 启动ROS Bridge：
 ```bash
-code ~/Library/Application\ Support/Claude/claude_desktop_config.json
-```
-
-- Windows
-```bash
-code $env:AppData\Claude\claude_desktop_config.json
-```
-
-## MCP Functions
-
-You can find the list of functions in the [MCPFUNCTIONS.md](MCPFUNCTIONS.md).
-
-## How To Use
-### 1. Set IP and Port to connect rosbridge.
-- Open `server.py` and change your `LOCAL_IP`, `ROSBRIDGE_IP` and `ROSBRIDGE_PORT`. (`ROSBRIDGE_PORT`'s default value is `9090`)
-
-### 2. Run rosbridge server.
-ROS 1
-```bash
+# ROS 1
 roslaunch rosbridge_server rosbridge_websocket.launch
-```
-ROS 2
-```bash
+
+# ROS 2
 ros2 launch rosbridge_server rosbridge_websocket_launch.xml
 ```
 
-### 3. Run any AI system that has imported ``ros-mcp-server``.
+### Claude Desktop配置
 
-### 4. Type "Make the robot move forward.".
-<center><img src="https://github.com/lpigeon/ros-mcp-server/blob/main/img/how_to_use_1.png" width="500"/></center>
+在Claude Desktop配置文件中添加：
 
-### 5. Check `rosbridge_server` and `ros topic`.
-- `rosbridge_server`
-<center><img src="https://github.com/lpigeon/ros-mcp-server/blob/main/img/how_to_use_2.png" /></center>
+```json
+{
+  "mcpServers": {
+    "ros-mcp-server": {
+      "url": "http://localhost:8000/mcp"
+    }
+  }
+}
+```
 
-- `ros topic`
-<center><img src="https://github.com/lpigeon/ros-mcp-server/blob/main/img/how_to_use_3.png" /></center>
+配置文件位置：
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
-## Simulation Test
-MCP-based control using the MOCA mobile manipulator within the NVIDIA Isaac Sim simulation environment. 
+## 🧪 测试
 
-<center><img src="https://github.com/lpigeon/ros-mcp-server/blob/main/img/result.gif" /></center>
+```bash
+# 快速测试
+make test
+
+# Docker环境测试
+make test-docker
+
+# 查看所有命令
+make help
+```
+
+## 🛠️ 主要功能
+
+### 机器人控制
+- `pub_twist()` - 发布速度控制命令
+- `send_nav2_goal()` - 发送导航目标点
+- `send_waypoints()` - 发送多个航点
+
+### 状态获取
+- `get_robot_position()` - 获取机器人位置
+- `get_robot_velocity()` - 获取机器人速度
+- `get_topics()` - 获取ROS话题列表
+
+### 传感器数据
+- `sub_image()` - 订阅相机图像
+- `sub_jointstate()` - 订阅关节状态
+
+## 🐳 Docker命令
+
+```bash
+# 构建镜像
+make build
+
+# 启动服务
+make up
+
+# 停止服务
+make down
+
+# 查看日志
+make logs
+
+# 清理资源
+make clean
+```
+
+## 🔧 环境变量
+
+创建`.env`文件配置：
+
+```bash
+# MCP服务器配置
+MCP_PORT=8000
+MCP_TRANSPORT=streamable-http
+
+# ROS配置
+ROSBRIDGE_IP=10.90.0.101
+ROSBRIDGE_PORT=9090
+LOCAL_IP=10.90.0.101
+
+# 镜像源配置（加速构建）
+USE_MIRROR=true
+APT_MIRROR=mirrors.tuna.tsinghua.edu.cn
+PIP_MIRROR=https://pypi.tuna.tsinghua.edu.cn/simple
+```
+
+## 📁 项目结构
+
+```
+ros-mcp-server/
+├── server.py              # 主服务器文件
+├── msgs/                   # ROS消息类型
+├── utils/                  # 工具类
+├── tests/                  # 测试文件
+├── docker-compose.yml      # Docker配置
+├── Dockerfile             # Docker镜像
+├── deploy-docker.sh       # 一键部署脚本
+├── Makefile              # 便捷命令
+└── README.md             # 说明文档
+```
+
+## 🤝 贡献
+
+欢迎提交Issue和Pull Request！
+
+## �� 许可证
+
+MIT License
