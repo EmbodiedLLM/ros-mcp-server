@@ -1,4 +1,4 @@
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 from typing import List, Any, Optional
 from pathlib import Path
 import json
@@ -506,4 +506,22 @@ def get_robot_amcl_pose(timeout: float = 5.0):
         }
 
 if __name__ == "__main__":
-    mcp.run(transport="stdio")
+    import os
+    
+    # 从环境变量获取配置，或使用默认值
+    host = os.getenv("MCP_HOST", "0.0.0.0")
+    port = int(os.getenv("MCP_PORT", "8000"))
+    transport = os.getenv("MCP_TRANSPORT", "streamable-http")
+    
+    if transport == "streamable-http":
+        print(f"Starting ROS MCP Server on {host}:{port} with streamable-http transport")
+        print(f"Connect URL: http://{host}:{port}/mcp")
+        mcp.run(transport="streamable-http", host=host, port=port, path="/mcp")
+    elif transport == "sse":
+        print(f"Starting ROS MCP Server on {host}:{port} with SSE transport")
+        print(f"Connect URL: http://{host}:{port}")
+        mcp.run(transport="sse", host=host, port=port)
+    else:
+        # 默认使用stdio（本地开发）
+        print("Starting ROS MCP Server with stdio transport")
+        mcp.run()
