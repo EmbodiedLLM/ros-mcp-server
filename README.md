@@ -14,17 +14,84 @@ Research based on this project can be found in the video linked below.
 ## Supported Types
 
 - geometry_msgs/Twist
+- geometry_msgs/PoseStamped (Nav2 goals)
+- geometry_msgs/PoseArray (Nav2 waypoints)
 - sensor_msgs/Image
 - sensor_msgs/JointState
+- Service calls (Nav2 waypoint following control)
 
 ## Features
 
 - **WebSocket-based universal compatibility**: Communicates with both ROS and ROS2 systems using rosbridge, enabling seamless integration regardless of ROS version.
 - **Cross-platform support**: Works on Linux, Windows, and MacOS, making it suitable for diverse development and deployment environments.
 - **Easy integration with LLMs and AI systems**: Natural language commands can be directly translated into robot actions via MCP functions.
+- **Nav2 navigation support**: Send navigation goals and control waypoint following (equivalent to RViz2 Nav2 Goal functionality).
 - **Extensible function set**: Easily add new robot control or sensor functions by extending the MCP tool interface.
 - **No ROS node modification required**: Interacts with existing ROS/ROS2 topics and services without changing your robot's core code.
-- **Native ROS/ROS2 command compatibility**: Optionally supports using local ROS/ROS2 libraries, so you can run native ROS commands and tools alongside WebSocket-based control. 
+- **Native ROS/ROS2 command compatibility**: Optionally supports using local ROS/ROS2 libraries, so you can run native ROS commands and tools alongside WebSocket-based control.
+
+## Navigation Features
+
+### Single Goal Navigation
+Send individual navigation goals to Nav2:
+```python
+# Send a simple navigation goal
+send_nav2_goal(x=2.0, y=3.0, yaw=1.57)
+
+# Send detailed goal with quaternion orientation
+send_nav2_goal_detailed(x=2.0, y=3.0, z=0.0, qx=0.0, qy=0.0, qz=0.707, qw=0.707)
+```
+
+### Waypoint Following
+Control multi-waypoint navigation (equivalent to RViz2 waypoint functionality):
+```python
+# Define waypoints: [[x, y, yaw], [x, y, yaw], ...]
+waypoints = [
+    [1.0, 2.0, 0.0],      # First waypoint
+    [3.0, 4.0, 1.57],     # Second waypoint  
+    [5.0, 6.0, 3.14]      # Third waypoint
+]
+
+# Send waypoints and start following
+send_and_start_waypoints(waypoints)
+
+# Or control step by step
+send_waypoints(waypoints)
+start_waypoint_following()
+pause_waypoint_following()
+resume_waypoint_following()
+stop_waypoint_following()
+```
+
+For detailed examples, see [WAYPOINT_EXAMPLES.md](WAYPOINT_EXAMPLES.md).
+
+### Position and Localization
+Get current robot position and motion state:
+```python
+# Get robot position (automatically selects best source)
+position = get_robot_position()
+
+# Get position from specific source
+amcl_position = get_robot_position(source="amcl")    # Map-based localization
+odom_position = get_robot_position(source="odom")    # Odometry-based position
+
+# Get current velocity
+velocity = get_robot_velocity()
+
+# Get complete odometry information
+odometry = get_robot_odometry()
+
+# Get AMCL pose with covariance
+amcl_pose = get_robot_amcl_pose()
+```
+
+**Position data includes:**
+- Coordinates (x, y, z)
+- Orientation (yaw angle in radians and degrees)
+- Quaternion representation
+- Frame ID (coordinate system)
+- Velocity information (for odometry)
+- Uncertainty/covariance (for AMCL)
 
 ## Contributing
 Contributions are welcome!  
