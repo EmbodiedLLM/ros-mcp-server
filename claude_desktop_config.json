@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "ros-mcp-server": {
+      "command": "uv",
+      "args": ["run", "stdio_proxy.py"],
+      "cwd": "/Users/yinzi/ros-mcp-server"
+    }
+  }
+} 
