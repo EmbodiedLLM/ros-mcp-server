@@ -96,21 +96,35 @@ python start_stdio.py --wrapper-only   # 终端2：启动stdio包装器
 
 在Claude Desktop配置文件中添加：
 
+**方案1：使用uv run（推荐）**
+
 ```json
 {
   "mcpServers": {
     "ros-mcp-server": {
-      "command": "python",
-      "args": ["/path/to/ros-mcp-server/stdio_wrapper.py"],
-      "env": {
-        "MCP_SERVER_URL": "http://localhost:8000/mcp"
-      }
+      "command": "uv",
+      "args": ["run", "start_stdio.py"],
+      "cwd": "/path/to/ros-mcp-server"
     }
   }
 }
 ```
 
-**替代方案：使用启动脚本**
+**方案2：使用uv run指定python**
+
+```json
+{
+  "mcpServers": {
+    "ros-mcp-server": {
+      "command": "uv",
+      "args": ["run", "python", "start_stdio.py"],
+      "cwd": "/path/to/ros-mcp-server"
+    }
+  }
+}
+```
+
+**方案3：直接使用python（如果没有uv）**
 
 ```json
 {
@@ -118,6 +132,23 @@ python start_stdio.py --wrapper-only   # 终端2：启动stdio包装器
     "ros-mcp-server": {
       "command": "python",
       "args": ["/path/to/ros-mcp-server/start_stdio.py"]
+    }
+  }
+}
+```
+
+**方案4：仅stdio包装器（需要服务器单独运行）**
+
+```json
+{
+  "mcpServers": {
+    "ros-mcp-server": {
+      "command": "uv",
+      "args": ["run", "stdio_wrapper.py"],
+      "env": {
+        "MCP_SERVER_URL": "http://localhost:8000/mcp"
+      },
+      "cwd": "/path/to/ros-mcp-server"
     }
   }
 }

@@ -100,21 +100,35 @@ python start_stdio.py --wrapper-only   # Terminal 2: Start stdio wrapper
 
 Add to Claude Desktop configuration file:
 
+**Option 1: Using uv run (Recommended)**
+
 ```json
 {
   "mcpServers": {
     "ros-mcp-server": {
-      "command": "python",
-      "args": ["/path/to/ros-mcp-server/stdio_wrapper.py"],
-      "env": {
-        "MCP_SERVER_URL": "http://localhost:8000/mcp"
-      }
+      "command": "uv",
+      "args": ["run", "start_stdio.py"],
+      "cwd": "/path/to/ros-mcp-server"
     }
   }
 }
 ```
 
-**Alternative: Using the launcher script**
+**Option 2: Using uv run with python**
+
+```json
+{
+  "mcpServers": {
+    "ros-mcp-server": {
+      "command": "uv",
+      "args": ["run", "python", "start_stdio.py"],
+      "cwd": "/path/to/ros-mcp-server"
+    }
+  }
+}
+```
+
+**Option 3: Using direct python (if uv not available)**
 
 ```json
 {
@@ -122,6 +136,23 @@ Add to Claude Desktop configuration file:
     "ros-mcp-server": {
       "command": "python",
       "args": ["/path/to/ros-mcp-server/start_stdio.py"]
+    }
+  }
+}
+```
+
+**Option 4: Stdio wrapper only (server must be running separately)**
+
+```json
+{
+  "mcpServers": {
+    "ros-mcp-server": {
+      "command": "uv",
+      "args": ["run", "stdio_wrapper.py"],
+      "env": {
+        "MCP_SERVER_URL": "http://localhost:8000/mcp"
+      },
+      "cwd": "/path/to/ros-mcp-server"
     }
   }
 }
