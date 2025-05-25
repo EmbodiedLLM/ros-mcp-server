@@ -15,7 +15,7 @@ A FastMCP-based ROS robot control server that allows AI assistants like Claude t
 
 ```bash
 # Clone the project
-git clone https://github.com/lpigeon/ros-mcp-server.git
+git clone https://github.com/EmbodiedLLM/ros-mcp-server.git
 cd ros-mcp-server
 
 # One-click deployment
