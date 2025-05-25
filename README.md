@@ -31,8 +31,27 @@ make deploy
 # Install uv (if not already installed)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Install dependencies
-uv sync
+# Install dependencies based on your needs:
+
+# For server only (ROS MCP server)
+uv sync --group server
+# or: make install-server
+# or: ./scripts/install.sh server
+
+# For client only (stdio wrapper)
+uv sync --group client
+# or: make install-client
+# or: ./scripts/install.sh client
+
+# For development (includes testing tools)
+uv sync --group dev
+# or: make install-dev
+# or: ./scripts/install.sh dev
+
+# For everything (full installation)
+uv sync --group all
+# or: make install-all
+# or: ./scripts/install.sh all
 
 # Start the server
 uv run server.py
@@ -60,9 +79,63 @@ roslaunch rosbridge_server rosbridge_websocket.launch
 ros2 launch rosbridge_server rosbridge_websocket_launch.xml
 ```
 
-### Claude Desktop Configuration
+## 🔌 Client Integration
+
+### Method 1: Stdio Local Transport (Recommended for Claude Desktop)
+
+Most MCP clients like Claude Desktop use stdio local transport. Use our stdio wrapper for seamless integration:
+
+#### Quick Start with Stdio
+
+```bash
+# Start both HTTP server and stdio wrapper
+python start_stdio.py
+
+# Or start them separately
+python start_stdio.py --server-only    # Terminal 1: Start HTTP server
+python start_stdio.py --wrapper-only   # Terminal 2: Start stdio wrapper
+```
+
+#### Claude Desktop Configuration
 
 Add to Claude Desktop configuration file:
+
+```json
+{
+  "mcpServers": {
+    "ros-mcp-server": {
+      "command": "python",
+      "args": ["/path/to/ros-mcp-server/stdio_wrapper.py"],
+      "env": {
+        "MCP_SERVER_URL": "http://localhost:8000/mcp"
+      }
+    }
+  }
+}
+```
+
+**Alternative: Using the launcher script**
+
+```json
+{
+  "mcpServers": {
+    "ros-mcp-server": {
+      "command": "python",
+      "args": ["/path/to/ros-mcp-server/start_stdio.py"]
+    }
+  }
+}
+```
+
+Configuration file locations:
+
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **Linux**: `~/.config/claude/claude_desktop_config.json`
+
+### Method 2: Direct HTTP Connection
+
+For clients that support HTTP transport directly:
 
 ```json
 {
@@ -74,10 +147,39 @@ Add to Claude Desktop configuration file:
 }
 ```
 
-Configuration file locations:
+### Method 3: Custom Integration
 
-- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+For custom MCP clients, you can integrate directly:
+
+```python
+# HTTP transport
+import requests
+
+response = requests.post("http://localhost:8000/mcp", json={
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tools/list"
+})
+
+# Stdio transport (using our wrapper)
+import subprocess
+import json
+
+process = subprocess.Popen(
+    ["python", "stdio_wrapper.py"],
+    stdin=subprocess.PIPE,
+    stdout=subprocess.PIPE,
+    text=True
+)
+
+# Send request
+request = {"jsonrpc": "2.0", "id": 1, "method": "tools/list"}
+process.stdin.write(json.dumps(request) + "\n")
+process.stdin.flush()
+
+# Read response
+response = json.loads(process.stdout.readline())
+```
 
 ## 🧪 Testing
 
@@ -155,6 +257,11 @@ PIP_MIRROR=https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 ros-mcp-server/
 ├── server.py              # Main server file
+├── stdio_wrapper.py       # Stdio transport wrapper
+├── start_stdio.py         # Stdio launcher script
+├── scripts/               # Installation scripts
+│   ├── install.sh         # Linux/macOS installation script
+│   └── install.bat        # Windows installation script
 ├── msgs/                   # ROS message types
 ├── utils/                  # Utility classes
 ├── tests/                  # Test files
@@ -162,9 +269,16 @@ ros-mcp-server/
 ├── Dockerfile             # Docker image
 ├── deploy-docker.sh       # One-click deployment script
 ├── Makefile              # Convenient commands
+├── pyproject.toml         # Project configuration and dependency management
 ├── README.md             # Documentation (English)
-└── README_zh.md          # Documentation (Chinese)
+├── README_zh.md          # Documentation (Chinese)
+└── USAGE_EXAMPLES.md     # Usage examples and scenarios
 ```
+
+## 📖 Documentation
+
+- **[USAGE_EXAMPLES.md](USAGE_EXAMPLES.md)** - Detailed usage examples for different scenarios
+- **[POSITION_EXAMPLES.md](POSITION_EXAMPLES.md)** - Robot position examples
 
 ## 🤝 Contributing
 

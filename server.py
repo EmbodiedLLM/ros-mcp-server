@@ -505,6 +505,11 @@ def get_robot_amcl_pose(timeout: float = 5.0):
             "error": f"AMCL pose error: {e}"
         }
 
+@mcp.get("/health")
+def health_check():
+    """健康检查端点"""
+    return {"status": "healthy", "service": "ros-mcp-server"}
+
 if __name__ == "__main__":
     import os
     
@@ -516,10 +521,12 @@ if __name__ == "__main__":
     if transport == "streamable-http":
         print(f"Starting ROS MCP Server on {host}:{port} with streamable-http transport")
         print(f"Connect URL: http://{host}:{port}/mcp")
+        print(f"Health check URL: http://{host}:{port}/health")
         mcp.run(transport="streamable-http", host=host, port=port, path="/mcp")
     elif transport == "sse":
         print(f"Starting ROS MCP Server on {host}:{port} with SSE transport")
         print(f"Connect URL: http://{host}:{port}")
+        print(f"Health check URL: http://{host}:{port}/health")
         mcp.run(transport="sse", host=host, port=port)
     else:
         # 默认使用stdio（本地开发）

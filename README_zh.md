@@ -29,8 +29,27 @@ make deploy
 # 安装uv（如果没有）
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# 安装依赖
-uv sync
+# 根据需要安装依赖：
+
+# 仅服务器端（ROS MCP服务器）
+uv sync --group server
+# 或: make install-server
+# 或: ./scripts/install.sh server
+
+# 仅客户端（stdio包装器）
+uv sync --group client
+# 或: make install-client
+# 或: ./scripts/install.sh client
+
+# 开发环境（包含测试工具）
+uv sync --group dev
+# 或: make install-dev
+# 或: ./scripts/install.sh dev
+
+# 完整安装（所有依赖）
+uv sync --group all
+# 或: make install-all
+# 或: ./scripts/install.sh all
 
 # 启动服务器
 uv run server.py
@@ -56,9 +75,62 @@ roslaunch rosbridge_server rosbridge_websocket.launch
 ros2 launch rosbridge_server rosbridge_websocket_launch.xml
 ```
 
-### Claude Desktop配置
+## 🔌 客户端接入
+
+### 方法1：Stdio本地传输（推荐用于Claude Desktop）
+
+大多数MCP客户端（如Claude Desktop）使用stdio本地传输。使用我们的stdio包装器实现无缝集成：
+
+#### Stdio快速启动
+
+```bash
+# 同时启动HTTP服务器和stdio包装器
+python start_stdio.py
+
+# 或分别启动
+python start_stdio.py --server-only    # 终端1：启动HTTP服务器
+python start_stdio.py --wrapper-only   # 终端2：启动stdio包装器
+```
+
+#### Claude Desktop配置
 
 在Claude Desktop配置文件中添加：
+
+```json
+{
+  "mcpServers": {
+    "ros-mcp-server": {
+      "command": "python",
+      "args": ["/path/to/ros-mcp-server/stdio_wrapper.py"],
+      "env": {
+        "MCP_SERVER_URL": "http://localhost:8000/mcp"
+      }
+    }
+  }
+}
+```
+
+**替代方案：使用启动脚本**
+
+```json
+{
+  "mcpServers": {
+    "ros-mcp-server": {
+      "command": "python",
+      "args": ["/path/to/ros-mcp-server/start_stdio.py"]
+    }
+  }
+}
+```
+
+配置文件位置：
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **Linux**: `~/.config/claude/claude_desktop_config.json`
+
+### 方法2：直接HTTP连接
+
+对于直接支持HTTP传输的客户端：
 
 ```json
 {
@@ -70,9 +142,39 @@ ros2 launch rosbridge_server rosbridge_websocket_launch.xml
 }
 ```
 
-配置文件位置：
-- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+### 方法3：自定义集成
+
+对于自定义MCP客户端，可以直接集成：
+
+```python
+# HTTP传输
+import requests
+
+response = requests.post("http://localhost:8000/mcp", json={
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tools/list"
+})
+
+# Stdio传输（使用我们的包装器）
+import subprocess
+import json
+
+process = subprocess.Popen(
+    ["python", "stdio_wrapper.py"],
+    stdin=subprocess.PIPE,
+    stdout=subprocess.PIPE,
+    text=True
+)
+
+# 发送请求
+request = {"jsonrpc": "2.0", "id": 1, "method": "tools/list"}
+process.stdin.write(json.dumps(request) + "\n")
+process.stdin.flush()
+
+# 读取响应
+response = json.loads(process.stdout.readline())
+```
 
 ## 🧪 测试
 
@@ -147,6 +249,11 @@ PIP_MIRROR=https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 ros-mcp-server/
 ├── server.py              # 主服务器文件
+├── stdio_wrapper.py       # Stdio传输包装器
+├── start_stdio.py         # Stdio启动脚本
+├── scripts/               # 安装脚本
+│   ├── install.sh         # Linux/macOS安装脚本
+│   └── install.bat        # Windows安装脚本
 ├── msgs/                   # ROS消息类型
 ├── utils/                  # 工具类
 ├── tests/                  # 测试文件
@@ -154,7 +261,9 @@ ros-mcp-server/
 ├── Dockerfile             # Docker镜像
 ├── deploy-docker.sh       # 一键部署脚本
 ├── Makefile              # 便捷命令
-└── README.md             # 说明文档
+├── pyproject.toml         # 项目配置和依赖管理
+├── README.md             # 说明文档（英文）
+└── README_zh.md          # 说明文档（中文）
 ```
 
 ## 🤝 贡献

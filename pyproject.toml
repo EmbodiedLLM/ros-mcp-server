@@ -1,12 +1,49 @@
 [project]
 name = "ros-mcp-server"
 version = "0.1.0"
-description = "Add your description here"
+description = "A FastMCP-based ROS robot control server with stdio transport support"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    # Core dependencies needed by all components
     "fastmcp>=2.0.0",
+]
+
+[dependency-groups]
+# Server dependencies - for running the ROS MCP server
+server = [
+    "opencv-python>=4.11.0.86",
+    "websocket>=0.2.1", 
+    "websocket-client>=1.8.0",
+]
+
+# Client dependencies - for stdio wrapper and client tools
+client = [
+    "aiohttp>=3.8.0",
+    "requests>=2.28.0",
+]
+
+# Development dependencies - for testing and development
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0",
+    "pre-commit>=3.0.0",
+]
+
+# All dependencies - convenience group for full installation
+all = [
     "opencv-python>=4.11.0.86",
     "websocket>=0.2.1",
-    "websocket-client>=1.8.0",
+    "websocket-client>=1.8.0", 
+    "aiohttp>=3.8.0",
+    "requests>=2.28.0",
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0",
+    "pre-commit>=3.0.0",
 ]
