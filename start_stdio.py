@@ -2,13 +2,17 @@
 """
 快速测试MCP服务器连接
 """
+import os
+import dotenv
 import asyncio
 from fastmcp import Client
+
+dotenv.load_dotenv()
 
 async def test_mcp():
     try:
         print("🔗 正在连接到MCP服务器...")
-        client = Client('http://10.90.0.101:8000/mcp')
+        client = Client(f'http://{os.getenv("MCP_HOST")}:{os.getenv("MCP_PORT")}/mcp')
         
         async with client:
             print("✅ 连接成功！")

@@ -9,6 +9,11 @@ import sys
 import logging
 from typing import Any, Dict, List, Optional
 from fastmcp import Client
+import os
+import dotenv
+
+dotenv.load_dotenv()
+
 
 # 配置日志到stderr，避免干扰stdio通信
 logging.basicConfig(
@@ -19,7 +24,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class StdioProxy:
-    def __init__(self, mcp_server_url: str = 'http://10.90.0.101:8000/mcp'):
+    def __init__(self, mcp_server_url: str = f'http://{os.getenv("MCP_HOST")}:{os.getenv("MCP_PORT")}/mcp'):
         self.mcp_server_url = mcp_server_url
         self.client: Optional[Client] = None
         self.request_id = 0
@@ -245,8 +250,8 @@ async def main():
     parser = argparse.ArgumentParser(description='MCP STDIO代理服务器')
     parser.add_argument(
         '--server-url', 
-        default='http://10.90.0.101:8000/mcp',
-        help='MCP服务器URL (默认: http://10.90.0.101:8000/mcp)'
+        default=f'http://{os.getenv("MCP_HOST")}:{os.getenv("MCP_PORT")}/mcp',
+        help=f'MCP服务器URL (默认: http://{os.getenv("MCP_HOST")}:{os.getenv("MCP_PORT")}/mcp)'
     )
     
     args = parser.parse_args()

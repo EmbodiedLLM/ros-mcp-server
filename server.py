@@ -2,7 +2,6 @@ from fastmcp import FastMCP
 from typing import List, Any, Optional
 from pathlib import Path
 import json
-import os
 from utils.websocket_manager import WebSocketManager
 from utils.service_caller import ServiceCaller
 
@@ -12,10 +11,9 @@ from msgs.nav_msgs import Odometry
 from msgs.nav2_msgs.navigate_to_pose_action import NavigateToPoseAction
 from msgs.nav2_msgs.follow_waypoints_action import FollowWaypointsAction
 
-# 从环境变量读取配置，提供默认值
-LOCAL_IP = os.getenv("LOCAL_IP", "10.90.0.101")
-ROSBRIDGE_IP = os.getenv("ROSBRIDGE_IP", "10.90.0.101") 
-ROSBRIDGE_PORT = int(os.getenv("ROSBRIDGE_PORT", "9090"))
+LOCAL_IP = "10.90.0.101"
+ROSBRIDGE_IP = "10.90.0.101"
+ROSBRIDGE_PORT = 9090
 
 mcp = FastMCP("ros-mcp-server")
 ws_manager = WebSocketManager(ROSBRIDGE_IP, ROSBRIDGE_PORT, LOCAL_IP)
@@ -507,28 +505,21 @@ def get_robot_amcl_pose(timeout: float = 5.0):
             "error": f"AMCL pose error: {e}"
         }
 
-@mcp.get("/health")
-def health_check():
-    """健康检查端点"""
-    return {"status": "healthy", "service": "ros-mcp-server"}
-
 if __name__ == "__main__":
     import os
     
     # 从环境变量获取配置，或使用默认值
     host = os.getenv("MCP_HOST", "0.0.0.0")
-    port = int(os.getenv("MCP_PORT", "8000"))
+    port = int(os.getenv("MCP_PORT", "8001"))
     transport = os.getenv("MCP_TRANSPORT", "streamable-http")
     
     if transport == "streamable-http":
         print(f"Starting ROS MCP Server on {host}:{port} with streamable-http transport")
         print(f"Connect URL: http://{host}:{port}/mcp")
-        print(f"Health check URL: http://{host}:{port}/health")
         mcp.run(transport="streamable-http", host=host, port=port, path="/mcp")
     elif transport == "sse":
         print(f"Starting ROS MCP Server on {host}:{port} with SSE transport")
         print(f"Connect URL: http://{host}:{port}")
-        print(f"Health check URL: http://{host}:{port}/health")
         mcp.run(transport="sse", host=host, port=port)
     else:
         # 默认使用stdio（本地开发）
