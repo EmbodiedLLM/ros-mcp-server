@@ -2,6 +2,7 @@ from fastmcp import FastMCP
 from typing import List, Any, Optional
 from pathlib import Path
 import json
+import os
 from utils.websocket_manager import WebSocketManager
 from utils.service_caller import ServiceCaller
 
@@ -11,9 +12,10 @@ from msgs.nav_msgs import Odometry
 from msgs.nav2_msgs.navigate_to_pose_action import NavigateToPoseAction
 from msgs.nav2_msgs.follow_waypoints_action import FollowWaypointsAction
 
-LOCAL_IP = "10.90.0.101"
-ROSBRIDGE_IP = "10.90.0.101"
-ROSBRIDGE_PORT = 9090
+# 从环境变量读取配置，提供默认值
+LOCAL_IP = os.getenv("LOCAL_IP", "10.90.0.101")
+ROSBRIDGE_IP = os.getenv("ROSBRIDGE_IP", "10.90.0.101") 
+ROSBRIDGE_PORT = int(os.getenv("ROSBRIDGE_PORT", "9090"))
 
 mcp = FastMCP("ros-mcp-server")
 ws_manager = WebSocketManager(ROSBRIDGE_IP, ROSBRIDGE_PORT, LOCAL_IP)
